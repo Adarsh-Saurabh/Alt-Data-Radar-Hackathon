@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alternative Data Radar — Market Briefing</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0e0e0d;
+    --ink-2: #3a3a38;
+    --ink-3: #6b6b67;
+    --ink-4: #9e9e99;
+    --rule: #e2e0da;
+    --rule-strong: #c8c6bf;
+    --bg: #faf9f7;
+    --bg-2: #f1efe9;
+    --bg-3: #e9e7e1;
+    --accent: #1a4a8a;
+    --accent-light: #e8f0fb;
+    --accent-mid: #5882c1;
+    --warn: #8a4a1a;
+    --warn-light: #faf0e8;
+    --green: #1a5e2e;
+    --green-light: #eaf5ee;
+    --red: #8a1a1a;
+    --red-light: #faeaea;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.65;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 0 80px;
+  }
+
+  .cover {
+    background: var(--ink);
+    color: #faf9f7;
+    padding: 48px 48px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 280px; height: 280px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.07);
+    transform: translate(40%, 40%);
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: 80px;
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+  .cover-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 24px;
+  }
+  .cover-tag {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.7);
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 4px 10px;
+    border-radius: 3px;
+    margin-bottom: 20px;
+  }
+  .cover h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 38px;
+    font-weight: 400;
+    line-height: 1.15;
+    color: #fff;
+    margin-bottom: 16px;
+    max-width: 540px;
+  }
+  .cover h1 em {
+    font-style: italic;
+    color: rgba(255,255,255,0.55);
+  }
+  .cover-sub {
+    font-size: 15px;
+    color: rgba(255,255,255,0.5);
+    max-width: 480px;
+    line-height: 1.6;
+  }
+  .cover-meta {
+    display: flex;
+    gap: 32px;
+    margin-top: 36px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  .cover-meta-item { font-family: 'IBM Plex Mono', monospace; }
+  .cover-meta-item .label { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 4px; }
+  .cover-meta-item .val { font-size: 12px; color: rgba(255,255,255,0.65); }
+
+  .toc {
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--rule);
+    padding: 20px 48px;
+    display: flex;
+    gap: 0;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .toc-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-4);
+    margin-right: 20px;
+    white-space: nowrap;
+  }
+  .toc a {
+    font-size: 12px;
+    color: var(--ink-3);
+    text-decoration: none;
+    padding: 4px 14px;
+    border-right: 1px solid var(--rule-strong);
+    white-space: nowrap;
+  }
+  .toc a:last-child { border-right: none; }
+  .toc a:hover { color: var(--accent); }
+
+  .section {
+    padding: 40px 48px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .section:last-child { border-bottom: none; }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .section-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-4);
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+  }
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--ink);
+  }
+  .section-rule {
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+    margin-left: 8px;
+    align-self: center;
+  }
+
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--bg-2);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 16px 18px;
+  }
+  .stat-card .num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    color: var(--ink);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-card .num.accent { color: var(--accent); }
+  .stat-card .num.warn { color: var(--warn); }
+  .stat-card .lbl {
+    font-size: 11px;
+    color: var(--ink-3);
+    line-height: 1.4;
+  }
+  .stat-card .src {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: var(--ink-4);
+    margin-top: 8px;
+  }
+
+  .insight-list { list-style: none; }
+  .insight-list li {
+    display: flex;
+    gap: 14px;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--rule);
+    align-items: flex-start;
+  }
+  .insight-list li:last-child { border-bottom: none; }
+  .insight-list .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-mid);
+    margin-top: 7px;
+    flex-shrink: 0;
+  }
+  .insight-list .dot.warn { background: #c87941; }
+  .insight-list .dot.green { background: #2e8a50; }
+  .insight-list li p { font-size: 13.5px; color: var(--ink-2); line-height: 1.6; }
+  .insight-list li strong { color: var(--ink); font-weight: 500; }
+
+  .comp-table { width: 100%; border-collapse: collapse; }
+  .comp-table thead th {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-4);
+    text-align: left;
+    padding: 0 12px 10px;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+  .comp-table thead th:first-child { padding-left: 0; }
+  .comp-table tbody tr { border-bottom: 1px solid var(--rule); }
+  .comp-table tbody tr:last-child { border-bottom: none; }
+  .comp-table tbody td {
+    padding: 14px 12px;
+    vertical-align: top;
+    font-size: 13px;
+    color: var(--ink-2);
+    line-height: 1.5;
+  }
+  .comp-table tbody td:first-child {
+    padding-left: 0;
+    font-weight: 500;
+    color: var(--ink);
+    font-size: 13.5px;
+    white-space: nowrap;
+  }
+  .comp-table .badge {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    padding: 2px 7px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .badge-high { background: var(--red-light); color: var(--red); }
+  .badge-mid { background: var(--warn-light); color: var(--warn); }
+  .badge-low { background: var(--green-light); color: var(--green); }
+  .badge-blue { background: var(--accent-light); color: var(--accent); }
+
+  .tag-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag {
+    font-size: 11px;
+    background: var(--bg-3);
+    color: var(--ink-3);
+    border: 1px solid var(--rule-strong);
+    border-radius: 3px;
+    padding: 2px 8px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .profile-card {
+    background: var(--bg-2);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 20px 22px;
+  }
+  .profile-card h4 {
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-4);
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .profile-card ul { list-style: none; }
+  .profile-card ul li {
+    font-size: 13px;
+    color: var(--ink-2);
+    padding: 5px 0;
+    display: flex;
+    gap: 8px;
+    line-height: 1.45;
+  }
+  .profile-card ul li::before {
+    content: '—';
+    color: var(--ink-4);
+    flex-shrink: 0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    margin-top: 1px;
+  }
+  .profile-card ul li strong { color: var(--ink); font-weight: 500; }
+
+  .pain-item {
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    gap: 16px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--rule);
+    align-items: start;
+  }
+  .pain-item:last-child { border-bottom: none; }
+  .pain-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 18px;
+    color: var(--rule-strong);
+    font-weight: 500;
+    line-height: 1.3;
+    text-align: right;
+  }
+  .pain-body h4 {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 5px;
+  }
+  .pain-body p { font-size: 13px; color: var(--ink-3); line-height: 1.6; }
+  .pain-body .signal {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    margin-top: 8px;
+    padding: 3px 8px;
+    border-radius: 3px;
+  }
+  .signal-opp { background: var(--accent-light); color: var(--accent); }
+  .signal-risk { background: var(--warn-light); color: var(--warn); }
+
+  .callout {
+    border-left: 3px solid var(--accent-mid);
+    background: var(--accent-light);
+    border-radius: 0 6px 6px 0;
+    padding: 14px 18px;
+    margin: 24px 0;
+  }
+  .callout p { font-size: 13px; color: var(--accent); line-height: 1.6; }
+  .callout p strong { font-weight: 500; }
+
+  .footer {
+    padding: 24px 48px;
+    background: var(--bg-2);
+    border-top: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer p { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink-4); }
+
+  @media (max-width: 680px) {
+    .cover, .section, .toc, .footer { padding-left: 24px; padding-right: 24px; }
+    .stat-row { grid-template-columns: 1fr 1fr; }
+    .profile-grid { grid-template-columns: 1fr; }
+    .cover h1 { font-size: 28px; }
+    .toc { gap: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="cover-label">MVP Concept Brief · Idea 02 of Series</div>
+  <div class="cover-tag">Finance · Alternative Data</div>
+  <h1>Alternative Data <em>Radar</em></h1>
+  <p class="cover-sub">A market overview, competitor map, buyer profile, and customer pain points for a platform that synthesizes digital signals — job postings, pricing changes, web traffic — into pre-earnings intelligence for investors.</p>
+  <div class="cover-meta">
+    <div class="cover-meta-item"><div class="label">Prepared</div><div class="val">May 2026</div></div>
+    <div class="cover-meta-item"><div class="label">Primary buyer</div><div class="val">Hedge Funds &amp; Buy-Side Research</div></div>
+    <div class="cover-meta-item"><div class="label">Market stage</div><div class="val">Growth · Consolidating</div></div>
+  </div>
+</div>
+
+<nav class="toc">
+  <span class="toc-label">Sections</span>
+  <a href="#market">01 Market Overview</a>
+  <a href="#competitors">02 Competitor Analysis</a>
+  <a href="#buyer">03 Buyer Profile</a>
+  <a href="#pain">04 Pain Points</a>
+</nav>
+
+
+<!-- SECTION 1: MARKET OVERVIEW -->
+<section class="section" id="market">
+  <div class="section-header">
+    <span class="section-num">01</span>
+    <h2 class="section-title">Market Overview</h2>
+    <div class="section-rule"></div>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="num accent">~$14B</div>
+      <div class="lbl">Global alt data market size, 2026</div>
+      <div class="src">Various: Mordor, GVR, IMARC</div>
+    </div>
+    <div class="stat-card">
+      <div class="num warn">~35–52%</div>
+      <div class="lbl">Consensus CAGR through 2030</div>
+      <div class="src">Mordor Intelligence, 2026</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">68%</div>
+      <div class="lbl">End-user share held by hedge fund operators</div>
+      <div class="src">Grand View Research</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">90%</div>
+      <div class="lbl">Investment adviser adoption in 2025, up from 62% in 2023</div>
+      <div class="src">Lowenstein Sandler Report, 2025</div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <p><strong>The central tension:</strong> Alternative data adoption is at an all-time high, yet alpha derived from it is eroding at the fastest rate on record. Funds that once had a 6-month edge from a dataset now have weeks. The market needs <strong>synthesis and novelty</strong>, not just more raw data feeds.</p>
+  </div>
+
+  <ul class="insight-list">
+    <li>
+      <span class="dot"></span>
+      <p><strong>Hedge funds are the core market.</strong> They account for 68% of all alternative data end-users and are the most acquisitive buyers — Morgan Stanley estimates serious funds spend $1M per $1B AUM in year 1, scaling to $3M annually by year 3. A $5B fund builds toward $15M/year in data costs.</p>
+    </li>
+    <li>
+      <span class="dot"></span>
+      <p><strong>Web-scraped data is the dominant signal type.</strong> It appears in 56% of investment cases and is used by 59% of advisers to train custom AI systems. Job postings and pricing pages are particularly high-value signals for pre-earnings prediction.</p>
+    </li>
+    <li>
+      <span class="dot warn"></span>
+      <p><strong>The barrier to entry is collapsing — fast.</strong> What cost $500,000/year in 2015 can now be accessed for $5,000 in 2026. Smaller RIAs and independent analysts are entering the market for the first time, creating a downstream buyer segment below the institutional tier.</p>
+    </li>
+    <li>
+      <span class="dot warn"></span>
+      <p><strong>Alpha decay is the defining challenge of 2026.</strong> Research shows that predictive signals lose 5–10% of their effectiveness annually in liquid markets. Institutional portfolio convergence — measured by pairwise cosine similarity of holdings — has increased 42% since 2013, directly correlated with AI adoption waves.</p>
+    </li>
+    <li>
+      <span class="dot green"></span>
+      <p><strong>AI integration is creating a new layer of demand.</strong> 93% of investment advisers plan to grow AI budgets in 2026, yet only 31% have adopted AI-processed data to optimize strategies directly. This gap — between AI spend intent and actual deployment — represents an actionable whitespace for a synthesis platform.</p>
+    </li>
+    <li>
+      <span class="dot green"></span>
+      <p><strong>M&amp;A signals strategic importance.</strong> BlackRock's $3.2B acquisition of Preqin and S&amp;P Global's acquisition of With Intelligence in October 2025 confirm that alternative data is moving from niche tool to institutional infrastructure. Consolidation is underway; the window for independent platforms is narrowing.</p>
+    </li>
+  </ul>
+</section>
+
+
+<!-- SECTION 2: COMPETITOR ANALYSIS -->
+<section class="section" id="competitors">
+  <div class="section-header">
+    <span class="section-num">02</span>
+    <h2 class="section-title">Competitor Analysis</h2>
+    <div class="section-rule"></div>
+  </div>
+
+  <p style="font-size:13px; color: var(--ink-3); margin-bottom: 22px; line-height: 1.6;">The market is split between large platforms selling siloed data feeds (YipitData, Bloomberg) and niche signal providers (Thinknum, RavenPack). No major player currently offers a synthesized, multi-signal <em>company health score</em> view targeting the pre-earnings use case specifically.</p>
+
+  <table class="comp-table">
+    <thead>
+      <tr>
+        <th style="width:150px">Company</th>
+        <th style="width:160px">Core Signal</th>
+        <th>Positioning</th>
+        <th style="width:110px">Price Tier</th>
+        <th style="width:130px">Gap / Weakness</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>YipitData <span style="font-size:11px; color:var(--ink-4); font-weight:400; display:block">Vista Data · $492M raised</span></td>
+        <td>Credit/debit transaction data · email receipts · web scraping</td>
+        <td>Top-ranked for consumer earnings prediction. Estimates within 2% of reported revenue for 1,000+ companies. Backed by Carlyle.</td>
+        <td><span class="badge badge-high">$100K–$1M+</span></td>
+        <td>Consumer-sector only; no job/pricing synthesis; opaque to smaller funds</td>
+      </tr>
+      <tr>
+        <td>Thinknum <span style="font-size:11px; color:var(--ink-4); font-weight:400; display:block">Most direct competitor</span></td>
+        <td>Job postings · pricing pages · social media · app ratings · store expansions</td>
+        <td>Real-time web signal tracking for corporate KPIs. Strong visualisation layer. Tracks car inventories, product pricing, employee movements.</td>
+        <td><span class="badge badge-high">$50K–$300K</span></td>
+        <td>Raw data delivery; limited synthesis into earnings signals; no scoring layer</td>
+      </tr>
+      <tr>
+        <td>Bloomberg Second Measure <span style="font-size:11px; color:var(--ink-4); font-weight:400; display:block">Acquired by Bloomberg</span></td>
+        <td>Consumer spending · near real-time retail &amp; restaurant analytics</td>
+        <td>Embedded in Bloomberg Terminal. Launched {ALTD &lt;GO&gt;} in Jan 2026 with near real-time alt data insights. Dominant reach via terminal distribution.</td>
+        <td><span class="badge badge-high">Terminal bundle</span></td>
+        <td>Spending data only; requires Bloomberg subscription; not accessible standalone</td>
+      </tr>
+      <tr>
+        <td>RavenPack <span style="font-size:11px; color:var(--ink-4); font-weight:400; display:block">News intelligence</span></td>
+        <td>News sentiment · 40,000+ sources · 7,000 event categories</td>
+        <td>Trusted legacy system for systematic models. Strong for broad macro &amp; news-driven strategies. Real-time delivery via cloud-native API.</td>
+        <td><span class="badge badge-mid">$30K–$200K</span></td>
+        <td>News-only; no operational signals (jobs, pricing); sentiment not specific to earnings</td>
+      </tr>
+      <tr>
+        <td>M Science <span style="font-size:11px; color:var(--ink-4); font-weight:400; display:block">Jefferies-owned</span></td>
+        <td>Consumer transaction analytics · alternative KPI metrics</td>
+        <td>Equity-focused consumer analytics. Recently in legal battle with YipitData. Distributed via Jefferies research relationships.</td>
+        <td><span class="badge badge-high">$100K+</span></td>
+        <td>Distribution limited to Jefferies clients; narrow consumer focus</td>
+      </tr>
+      <tr>
+        <td>SimilarWeb</td>
+        <td>Web traffic · app downloads · digital engagement</td>
+        <td>Strong for SaaS, marketplace, and e-commerce names. Used for competitive benchmarking and tracking digital engagement vs. competitors.</td>
+        <td><span class="badge badge-mid">$15K–$100K</span></td>
+        <td>Traffic-only; no synthesis with job/pricing signals; broad use case beyond finance</td>
+      </tr>
+      <tr>
+        <td>Eagle Alpha</td>
+        <td>Data discovery marketplace · due diligence reports</td>
+        <td>Helps funds find and evaluate alt data vendors. Acts as a connector/aggregator layer, not a signal provider itself.</td>
+        <td><span class="badge badge-mid">$20K–$80K</span></td>
+        <td>No direct signals; meta-layer only; helps you find data, not interpret it</td>
+      </tr>
+      <tr>
+        <td>ExtractAlpha <span style="font-size:11px; color:var(--ink-4); font-weight:400; display:block">Quant-focused</span></td>
+        <td>Analyst revision signals · quant factors · sentiment-based predictors</td>
+        <td>Targets quant funds with pre-built alpha factors. Strong backtesting support. Niche but high-signal for systematic strategies.</td>
+        <td><span class="badge badge-low">$10K–$60K</span></td>
+        <td>Quant-only; not usable for discretionary analysts; limited company coverage</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout" style="margin-top: 24px; border-left-color: #2e8a50; background: var(--green-light);">
+    <p style="color: var(--green);"><strong>The gap this MVP targets:</strong> No existing platform synthesizes job posting trends, pricing page changes, and web traffic into a unified, company-level "earnings health signal" that's accessible to mid-market funds and independent analysts at under $10K/year. The closest competitor (Thinknum) delivers raw data; it does not deliver a verdict.</p>
+  </div>
+</section>
+
+
+<!-- SECTION 3: BUYER PROFILE -->
+<section class="section" id="buyer">
+  <div class="section-header">
+    <span class="section-num">03</span>
+    <h2 class="section-title">Buyer &amp; Business Profile</h2>
+    <div class="section-rule"></div>
+  </div>
+
+  <div class="profile-grid">
+    <div class="profile-card">
+      <h4>Primary Buyer — Institutional</h4>
+      <ul>
+        <li><strong>Who:</strong> Equity long/short and event-driven hedge funds, $500M–$10B AUM</li>
+        <li><strong>Title:</strong> Fundamental analysts, sector PMs, research leads</li>
+        <li><strong>Trigger:</strong> Need earnings edge 4–8 weeks before quarterly report</li>
+        <li><strong>Budget authority:</strong> Research budget, $50K–$500K annually for alt data</li>
+        <li><strong>Decision cycle:</strong> 2–4 months; requires compliance sign-off on data provenance</li>
+        <li><strong>Spends today on:</strong> 3–8 separate vendor relationships for different signal types</li>
+      </ul>
+    </div>
+    <div class="profile-card">
+      <h4>Secondary Buyer — Emerging</h4>
+      <ul>
+        <li><strong>Who:</strong> Smaller RIAs, independent analysts, family offices, sub-$500M funds</li>
+        <li><strong>Title:</strong> Founder-PM, analyst teams of 1–3 people</li>
+        <li><strong>Trigger:</strong> Want institutional-quality signals without institutional budgets</li>
+        <li><strong>Budget authority:</strong> Direct; decisions made in days not months</li>
+        <li><strong>Decision cycle:</strong> 1–2 weeks; price-sensitive; prefer SaaS models</li>
+        <li><strong>Pain:</strong> Currently excluded from $50K+ data feeds entirely</li>
+      </ul>
+    </div>
+    <div class="profile-card">
+      <h4>Business Characteristics</h4>
+      <ul>
+        <li><strong>Geography:</strong> 56.8% of market is North America; NYC and London are anchor markets</li>
+        <li><strong>Industry:</strong> BFSI dominates with 16.5% revenue share; hedge funds alone = 68% of users</li>
+        <li><strong>Spend cadence:</strong> Annual contracts; mid-year expansions common when signals prove out</li>
+        <li><strong>Key metric they track:</strong> Earnings surprise rate, signal-to-noise ratio, latency to insight</li>
+        <li><strong>2025 budget growth:</strong> 89% of advisers planned to grow alt data budgets in 2026</li>
+      </ul>
+    </div>
+    <div class="profile-card">
+      <h4>What a Winning Pitch Looks Like</h4>
+      <ul>
+        <li><strong>Lead with backtests:</strong> Show accuracy against historical earnings surprises on 20–30 companies</li>
+        <li><strong>Compliance package first:</strong> MNPI clearance is a blocker; address it before the demo</li>
+        <li><strong>API-first framing:</strong> "Integrates with your existing workflow" beats "new dashboard to check"</li>
+        <li><strong>Signal novelty:</strong> Prove the signals are not already in YipitData or Bloomberg</li>
+        <li><strong>Time-to-signal:</strong> Show how many days before earnings the signal fires reliably</li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="margin-top: 20px;">
+    <p style="font-size: 12px; color: var(--ink-4); font-family: 'IBM Plex Mono', monospace; margin-bottom: 10px; letter-spacing: 0.08em; text-transform: uppercase;">Industries most actively tracked by these buyers</p>
+    <div class="tag-row">
+      <span class="tag">Consumer retail</span>
+      <span class="tag">SaaS / technology</span>
+      <span class="tag">E-commerce</span>
+      <span class="tag">Healthcare / pharma</span>
+      <span class="tag">Restaurants &amp; QSR</span>
+      <span class="tag">Automotive</span>
+      <span class="tag">Financial services</span>
+      <span class="tag">Logistics &amp; shipping</span>
+      <span class="tag">Real estate / REITs</span>
+    </div>
+  </div>
+</section>
+
+
+<!-- SECTION 4: PAIN POINTS -->
+<section class="section" id="pain">
+  <div class="section-header">
+    <span class="section-num">04</span>
+    <h2 class="section-title">Real Customer Pain Points</h2>
+    <div class="section-rule"></div>
+  </div>
+
+  <p style="font-size:13px; color: var(--ink-3); margin-bottom: 24px; line-height:1.6;">Drawn from industry reports, hedge fund practitioner commentary, and vendor positioning. These are the complaints that lead funds to switch or trial new solutions.</p>
+
+  <div class="pain-item">
+    <div class="pain-num">01</div>
+    <div class="pain-body">
+      <h4>Signal crowding kills the edge within weeks</h4>
+      <p>The datasets everyone buys — YipitData's transaction feed, SimilarWeb's traffic — are now priced into markets within days of availability. Predictive signals lose 5–10% of effectiveness annually. Funds report that data that generated 6-month alpha in 2020 now lasts 2–3 weeks before being arbitraged away.</p>
+      <span class="signal signal-opp">→ Opportunity: novel synthesis, not another raw feed</span>
+    </div>
+  </div>
+
+  <div class="pain-item">
+    <div class="pain-num">02</div>
+    <div class="pain-body">
+      <h4>Data fragmentation across 3–8 vendors with no unified view</h4>
+      <p>A typical fund tracking one company might use Thinknum for jobs, SimilarWeb for traffic, a credit card panel for transactions, and a news sentiment feed — all from different vendors, with different schemas, update cadences, and formats. There is no single "company dashboard." Analysts build this manually in Excel or internal tools.</p>
+      <span class="signal signal-opp">→ Opportunity: unified, per-company signal aggregation</span>
+    </div>
+  </div>
+
+  <div class="pain-item">
+    <div class="pain-num">03</div>
+    <div class="pain-body">
+      <h4>Cost structures exclude the fastest-growing buyer segment</h4>
+      <p>Quality satellite data runs $50K–$500K/year. Credit card panels are $100K–$1M+. Job data feeds range from $20K–$200K. Smaller funds and independent analysts — whose numbers are growing rapidly as the barrier to entry falls — are structurally priced out of the market at these tiers. Two-thirds of institutional advisers spend over $1M/year; almost no sub-$500M fund can justify that.</p>
+      <span class="signal signal-opp">→ Opportunity: accessible SaaS tier at $500–$2K/month</span>
+    </div>
+  </div>
+
+  <div class="pain-item">
+    <div class="pain-num">04</div>
+    <div class="pain-body">
+      <h4>Raw data requires 3–6 months of data engineering before it's usable</h4>
+      <p>Funds consistently cite integration overhead as the hidden cost of alt data. A clean, well-documented API can reduce time-to-signal dramatically, but most vendors deliver flat files or inconsistent schemas. The engineering bottleneck means many funds evaluate a dataset for months before deriving any value — and many never complete the integration.</p>
+      <span class="signal signal-risk">→ Risk to address: must deliver clean, documented, interpretable output</span>
+    </div>
+  </div>
+
+  <div class="pain-item">
+    <div class="pain-num">05</div>
+    <div class="pain-body">
+      <h4>Legal ambiguity around MNPI creates compliance paralysis</h4>
+      <p>The SEC's treatment of alternative data sits in a grey zone: public web data is generally legal; scraped data derived from a breach of duty is not. The line is blurry enough that compliance teams at larger funds regularly block or delay alt data purchases. Vendors that provide clear data provenance documentation, legal opinions, and audit trails win deals that others lose on compliance grounds alone.</p>
+      <span class="signal signal-risk">→ Risk to address: provenance and MNPI clearance is a must-have, not a nice-to-have</span>
+    </div>
+  </div>
+
+  <div class="pain-item">
+    <div class="pain-num">06</div>
+    <div class="pain-body">
+      <h4>Signals are noisy: too many false positives before earnings</h4>
+      <p>A single spike in job postings could mean expansion or just a seasonal pattern. A discount on a pricing page could be a promotional campaign or a sign of distress. Analysts report that the hardest part of using web-scraped data is distinguishing meaningful signal from noise — requiring either deep domain expertise or cross-signal validation. Most platforms sell the raw data and leave this problem entirely to the buyer.</p>
+      <span class="signal signal-opp">→ Opportunity: cross-signal scoring to surface only high-confidence changes</span>
+    </div>
+  </div>
+
+  <div class="pain-item">
+    <div class="pain-num">07</div>
+    <div class="pain-body">
+      <h4>Coverage is narrow: signals exist for large caps, not mid- and small-cap</h4>
+      <p>YipitData covers 1,000+ companies; most niche providers cover far fewer. The Russell 2000 — where information asymmetry and earnings surprises are most exploitable — has very limited alt data coverage. Funds running small-cap strategies face a coverage desert. The MVP has a genuine opening here if it can scale web signal collection beyond the S&amp;P 500 coverage that dominates the market.</p>
+      <span class="signal signal-opp">→ Opportunity: mid/small-cap coverage as a differentiation vector</span>
+    </div>
+  </div>
+
+  <div class="pain-item">
+    <div class="pain-num">08</div>
+    <div class="pain-body">
+      <h4>No early warning system: signals fire too close to the earnings date</h4>
+      <p>The most valuable signal fires 4–8 weeks before earnings. Most platforms deliver data with 1–2 week latency, or normalize it in ways that remove the early-warning edge. Funds want to know in late February what a company's March quarter will look like — not in April after the fact. Latency and signal timing are as important as accuracy.</p>
+      <span class="signal signal-opp">→ Opportunity: lead-time tracking and signal-fire alerting as core features</span>
+    </div>
+  </div>
+
+</section>
+
+<footer class="footer">
+  <p>Alternative Data Radar · Market Briefing · May 2026</p>
+  <p>Sources: Mordor Intelligence · Grand View Research · Kadoa · Daloopa · Lowenstein Sandler · Bright Data · Permutable AI</p>
+</footer>
+
+</body>
+</html>
