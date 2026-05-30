@@ -24,4 +24,5 @@ export type ExtractedSignal = {
   openEngineeringRoles: number;
   enterprisePrice: number | null;
   synthesisAlert: string;
+  webTrafficIndex: number;
 };
