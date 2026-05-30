@@ -1,5 +1,7 @@
 export function isDemoMode() {
-  return process.env.DEMO_MODE !== "false";
+  const v = process.env.DEMO_MODE;
+  if (v === undefined) return true;
+  return String(v).trim().toLowerCase() !== "false";
 }
 
 export function requireEnv(name: string) {
