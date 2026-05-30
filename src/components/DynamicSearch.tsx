@@ -14,10 +14,16 @@ export default function DynamicSearch({ onStart, onSuccess, onError }: DynamicSe
 
   const handleSearch = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!query.trim()) return;
+    const normalizedQuery = query.trim().replace(/\s+/g, " ");
+    if (!normalizedQuery) return;
+
+    if (normalizedQuery.length < 3 || !/[a-z]/i.test(normalizedQuery)) {
+      onError("Enter a real company name with at least 3 letters.");
+      return;
+    }
 
     setIsProcessing(true);
-    onStart(query.trim());
+    onStart(normalizedQuery);
 
     try {
       const response = await fetch("/api/signals/collect", {
@@ -26,7 +32,7 @@ export default function DynamicSearch({ onStart, onSuccess, onError }: DynamicSe
           "Content-Type": "application/json",
           "cron_secret": process.env.NEXT_PUBLIC_CRON_SECRET || "851c94a066d6a31eb18c2f1c5977167838b8584c10209cc378664d07839e10c9"
         },
-        body: JSON.stringify({ companyName: query })
+        body: JSON.stringify({ companyName: normalizedQuery })
       });
 
       const payload = await response.json();
@@ -56,7 +62,7 @@ export default function DynamicSearch({ onStart, onSuccess, onError }: DynamicSe
         <div>
           <h2 className="font-serif text-xl font-semibold text-ink">Autonomous Target Analysis</h2>
           <p className="mt-1 font-mono text-sm leading-6 text-ink/60">
-            Enter a company name and the agent will discover commercial endpoints, unlock pages, and extract financial signals.
+            Enter a real company name. The agent validates an official domain before unlocking pages or saving a signal.
           </p>
         </div>
       </div>
