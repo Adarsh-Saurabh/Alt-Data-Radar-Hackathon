@@ -60,7 +60,48 @@ export async function extractSignalsFromHtml(input: {
     throw new Error("AI/ML API returned an empty response.");
   }
 
-  const parsed = extractedSignalSchema.parse(JSON.parse(content));
+  // Robust JSON extraction from model output. Models sometimes wrap JSON in
+  // text or markdown fences, or add explanatory text. Try several heuristics.
+  function extractJsonFromContent(text: string): any {
+    // 1) Try direct parse first
+    try {
+      return JSON.parse(text);
+    } catch {}
+
+    // 2) Extract fenced code blocks (``` or ```json)
+    const fenceMatch = text.match(/```(?:json)?\n([\s\S]*?)\n```/i);
+    if (fenceMatch && fenceMatch[1]) {
+      try {
+        return JSON.parse(fenceMatch[1]);
+      } catch {}
+    }
+
+    // 3) Try to find the first balanced JSON object by taking from first '{' to last '}'
+    const firstBrace = text.indexOf("{");
+    const lastBrace = text.lastIndexOf("}");
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      const candidate = text.slice(firstBrace, lastBrace + 1);
+      try {
+        return JSON.parse(candidate);
+      } catch {}
+    }
+
+    // 4) Try JSON array as fallback
+    const firstBracket = text.indexOf("[");
+    const lastBracket = text.lastIndexOf("]");
+    if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+      const candidate = text.slice(firstBracket, lastBracket + 1);
+      try {
+        return JSON.parse(candidate);
+      } catch {}
+    }
+
+    throw new Error("Unable to parse JSON from AI/ML response.");
+  }
+
+  const parsedJson = extractJsonFromContent(content);
+
+  const parsed = extractedSignalSchema.parse(parsedJson);
 
   return {
     openEngineeringRoles: parsed.open_engineering_roles,

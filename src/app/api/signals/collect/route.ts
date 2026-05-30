@@ -34,8 +34,8 @@ export async function POST(request: NextRequest) {
   try {
     const target = (await request.json()) as CompanyTarget;
     const [careersHtml, pricingHtml] = await Promise.all([
-      fetchUnlockedHtml({ url: target.careersUrl }),
-      fetchUnlockedHtml({ url: target.pricingUrl })
+      fetchUnlockedHtml(target.careersUrl),
+      fetchUnlockedHtml(target.pricingUrl)
     ]);
 
     const extracted = await extractSignalsFromHtml({

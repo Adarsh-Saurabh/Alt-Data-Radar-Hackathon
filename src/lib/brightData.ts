@@ -1,30 +1,23 @@
-import { requireEnv } from "@/lib/env";
+export async function fetchUnlockedHtml(targetUrl: string): Promise<string> {
+  console.log(`Unlocking ${targetUrl} via Bright Data...`);
 
-type FetchUnlockedHtmlInput = {
-  url: string;
-};
-
-export async function fetchUnlockedHtml({ url }: FetchUnlockedHtmlInput) {
-  const apiKey = requireEnv("BRIGHT_DATA_API_KEY");
-  const zone = requireEnv("BRIGHT_DATA_WEB_UNLOCKER_ZONE");
-  const endpoint = process.env.BRIGHT_DATA_BASE_URL ?? "https://api.brightdata.com/request";
-
-  const response = await fetch(endpoint, {
+  const response = await fetch("https://api.brightdata.com/request", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.BRIGHT_DATA_API_KEY}`
     },
     body: JSON.stringify({
-      zone,
-      url,
+      zone: process.env.BRIGHT_DATA_WEB_UNLOCKER_ZONE,
+      url: targetUrl,
       format: "raw"
     })
   });
 
   if (!response.ok) {
-    throw new Error(`Bright Data request failed: ${response.status} ${response.statusText}`);
+    const errorText = await response.text();
+    throw new Error(`Bright Data Unlocker failed: ${response.status} - ${errorText}`);
   }
 
-  return response.text();
+  return await response.text();
 }
