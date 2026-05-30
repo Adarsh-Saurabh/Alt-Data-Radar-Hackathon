@@ -30,16 +30,10 @@ export async function POST(request: Request) {
       pricingHtml
     });
 
-    // Prefer AI-generated proxy webTrafficIndex, fallback to deterministic offset
-    const aiTraffic = (extracted as any).webTrafficIndex;
-    const dayOffset = new Date().getDate() % 15; // 0-14
-    const fallbackTraffic = Math.max(1, Math.min(100, 50 + dayOffset));
-    const webTrafficIndex = typeof aiTraffic === "number" ? aiTraffic : fallbackTraffic;
-
     const healthScore = calculateHealthScore({
       engineeringRoles: extracted.openEngineeringRoles,
       enterprisePrice: extracted.enterprisePrice,
-      webTrafficIndex
+      webTrafficIndex: extracted.webTrafficIndex
     });
 
     const signal = await insertSignal({
@@ -48,7 +42,7 @@ export async function POST(request: Request) {
       openRoles: extracted.openEngineeringRoles,
       engineeringRoles: extracted.openEngineeringRoles,
       enterprisePrice: extracted.enterprisePrice,
-      webTrafficIndex,
+      webTrafficIndex: extracted.webTrafficIndex,
       healthScore,
       confidence: confidenceForScore(healthScore),
       synthesisAlert: extracted.synthesisAlert,

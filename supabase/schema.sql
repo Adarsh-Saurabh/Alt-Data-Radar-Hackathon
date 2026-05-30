@@ -7,7 +7,7 @@ create table if not exists public.company_signals (
   open_roles integer not null default 0,
   engineering_roles integer not null default 0,
   enterprise_price integer,
-  web_traffic_index integer not null default 50,
+  web_traffic_index integer not null,
   health_score integer not null check (health_score between 0 and 100),
   confidence text not null check (confidence in ('low', 'medium', 'high')),
   synthesis_alert text not null,

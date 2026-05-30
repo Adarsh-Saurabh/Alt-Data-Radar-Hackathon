@@ -92,32 +92,37 @@ export async function POST(request: NextRequest) {
     const careersUrl = await findUrlViaSerp(`${companyName} careers jobs`);
     const commercialUrl = await findUrlViaSerp(`${companyName} pricing OR \"value calculator\" OR enterprise`);
 
-    if (!careersUrl && !commercialUrl) {
-      return NextResponse.json({ error: "Agent could not locate web targets." }, { status: 404 });
+    if (!careersUrl || !commercialUrl) {
+      const missingTargets = [
+        !careersUrl ? "careers/jobs page" : null,
+        !commercialUrl ? "pricing/commercial page" : null
+      ].filter(Boolean);
+
+      return NextResponse.json(
+        {
+          error: `Agent could not locate required web target${missingTargets.length > 1 ? "s" : ""}: ${missingTargets.join(", ")}.`
+        },
+        { status: 404 }
+      );
     }
 
     let combinedHtml = `COMPANY CONTEXT: ${companyName}\n\n`;
 
-    if (careersUrl) {
-      console.log(`[Unlocker] Scraping Careers: ${careersUrl}`);
-      const careersHtml = await fetchUnlockedHtml(careersUrl);
-      combinedHtml += `--- CAREERS PAGE ---\n${careersHtml}\n\n`;
-    }
+    console.log(`[Unlocker] Scraping Careers: ${careersUrl}`);
+    const careersHtml = await fetchUnlockedHtml(careersUrl);
+    combinedHtml += `--- CAREERS PAGE ---\n${careersHtml}\n\n`;
 
-    if (commercialUrl) {
-      console.log(`[Unlocker] Scraping Commercial: ${commercialUrl}`);
-      const commercialHtml = await fetchUnlockedHtml(commercialUrl);
-      combinedHtml += `--- COMMERCIAL PAGE ---\n${commercialHtml}\n\n`;
-    }
+    console.log(`[Unlocker] Scraping Commercial: ${commercialUrl}`);
+    const commercialHtml = await fetchUnlockedHtml(commercialUrl);
+    combinedHtml += `--- COMMERCIAL PAGE ---\n${commercialHtml}\n\n`;
 
     console.log(`[AI] Synthesizing ${companyName} data...`);
     const extracted = await extractSignalsFromHtml({ companyName, combinedHtml });
 
-    const webTrafficIndex = extracted.webTrafficIndex ?? Math.max(1, Math.min(100, 50 + (new Date().getDate() % 15)));
     const healthScore = calculateHealthScore({
       engineeringRoles: extracted.openEngineeringRoles,
       enterprisePrice: extracted.enterprisePrice,
-      webTrafficIndex
+      webTrafficIndex: extracted.webTrafficIndex
     });
 
     const signal = await insertSignal({
@@ -126,7 +131,7 @@ export async function POST(request: NextRequest) {
       openRoles: extracted.openEngineeringRoles,
       engineeringRoles: extracted.openEngineeringRoles,
       enterprisePrice: extracted.enterprisePrice,
-      webTrafficIndex,
+      webTrafficIndex: extracted.webTrafficIndex,
       healthScore,
       confidence: confidenceForScore(healthScore),
       synthesisAlert: extracted.synthesisAlert,
