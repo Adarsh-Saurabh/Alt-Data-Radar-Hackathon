@@ -22,7 +22,8 @@ function isAuthorized(request: NextRequest) {
 async function findUrlViaSerp(query: string): Promise<string | null> {
   console.log(`[SERP] Searching Google for: ${query}`);
   try {
-    const response = await fetch("https://api.brightdata.com/serp/request", {
+    const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}&hl=en&gl=us`;
+    const response = await fetch("https://api.brightdata.com/request", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -30,16 +31,32 @@ async function findUrlViaSerp(query: string): Promise<string | null> {
       },
       body: JSON.stringify({
         zone: process.env.BRIGHT_DATA_SERP_ZONE,
-        country: "us",
-        query
+        url: searchUrl,
+        format: "raw"
       })
     });
 
-    if (!response.ok) return null;
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[SERP] Bright Data failed: ${response.status} - ${errorText}`);
+      return null;
+    }
 
-    const data = await response.json();
-    if (data.organic && data.organic.length > 0) {
-      return data.organic[0].link;
+    const responseText = await response.text();
+    const data = JSON.parse(responseText);
+
+    // Bright Data SERP parsed layout: { organic: [...] } with link property.
+    if (data.organic && Array.isArray(data.organic) && data.organic.length > 0) {
+      const url = data.organic[0].link || data.organic[0].url;
+      if (url) return url;
+    }
+
+    // Handle direct REST API layout: { results: [...] } with type and url property
+    if (data.results && Array.isArray(data.results)) {
+      const organicResult = data.results.find((item: any) => item.type === "organic");
+      if (organicResult && organicResult.url) {
+        return organicResult.url;
+      }
     }
 
     return null;

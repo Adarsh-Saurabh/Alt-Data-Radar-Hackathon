@@ -1,10 +1,14 @@
+import { Search, SendHorizontal } from "lucide-react";
 import { useState, type FormEvent } from "react";
+import type { CompanySignal } from "@/types/signals";
 
 interface DynamicSearchProps {
-  onSuccess: () => void;
+  onStart: (companyName: string) => void;
+  onSuccess: (signal: CompanySignal) => void;
+  onError: (message: string) => void;
 }
 
-export default function DynamicSearch({ onSuccess }: DynamicSearchProps) {
+export default function DynamicSearch({ onStart, onSuccess, onError }: DynamicSearchProps) {
   const [query, setQuery] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -13,6 +17,7 @@ export default function DynamicSearch({ onSuccess }: DynamicSearchProps) {
     if (!query.trim()) return;
 
     setIsProcessing(true);
+    onStart(query.trim());
 
     try {
       const response = await fetch("/api/signals/collect", {
@@ -24,42 +29,58 @@ export default function DynamicSearch({ onSuccess }: DynamicSearchProps) {
         body: JSON.stringify({ companyName: query })
       });
 
-      if (!response.ok) throw new Error("Agent failed to analyze company");
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Agent failed to analyze company");
+      }
+
+      if (!payload.signal) {
+        throw new Error(payload.message ?? "Agent completed without returning a signal.");
+      }
 
       setQuery("");
-      onSuccess();
+      onSuccess(payload.signal as CompanySignal);
     } catch (error) {
       console.error(error);
-      alert("The AI agent couldn't process this company. Check logs.");
+      onError(error instanceof Error ? error.message : "The AI agent couldn't process this company.");
     } finally {
       setIsProcessing(false);
     }
   };
 
   return (
-    <form onSubmit={handleSearch} className="mb-8 p-6 bg-white rounded-lg shadow-sm border border-gray-200">
-      <h2 className="text-xl font-semibold mb-2 font-mono">Autonomous Target Analysis</h2>
-      <p className="text-sm text-gray-500 mb-4 font-mono">
-        Enter a company name. Our agent will discover their commercial endpoints, bypass security, and extract financial signals.
-      </p>
+    <form onSubmit={handleSearch} className="my-8 rounded-md border border-line bg-paper p-5">
+      <div className="flex items-center gap-3">
+        <Search className="h-5 w-5 text-blue" aria-hidden />
+        <div>
+          <h2 className="font-serif text-xl font-semibold text-ink">Autonomous Target Analysis</h2>
+          <p className="mt-1 font-mono text-sm leading-6 text-ink/60">
+            Enter a company name and the agent will discover commercial endpoints, unlock pages, and extract financial signals.
+          </p>
+        </div>
+      </div>
 
-      <div className="flex gap-3">
+      <div className="mt-5 flex flex-col gap-3 sm:flex-row">
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="e.g., Bloom Energy, Vercel, Pizza Hut..."
-          className="flex-1 font-serif border border-gray-300 rounded px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+          className="min-h-12 flex-1 rounded-md border border-line bg-white px-4 py-3 font-serif text-ink outline-none focus:ring-2 focus:ring-blue/20"
           disabled={isProcessing}
         />
         <button
           type="submit"
           disabled={isProcessing || !query.trim()}
-          className={`px-6 py-2 rounded font-medium text-black font-serif border border-gray-700 transition-all ${
-            isProcessing ? "bg-blue-400 cursor-wait" : "bg-blue-600 hover:bg-blue-700"
+          className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-md border px-5 py-3 font-serif font-semibold transition-all ${
+            isProcessing
+              ? "cursor-wait border-blue/30 bg-blue/12 text-blue"
+              : "border-ink bg-ink text-white hover:bg-ink/90"
           }`}
         >
           {isProcessing ? "Agent is working..." : "Deploy Agent"}
+          <SendHorizontal className="h-4 w-4" aria-hidden />
         </button>
       </div>
     </form>
