@@ -47,3 +47,23 @@ Example live collection body:
 ## Architecture
 
 See `docs/architecture.md` for the filesystem diagram and service relationships.
+
+## table schema (postgres-supabase)
+![alt text](image.png)
+
+## Sample response
+``{
+    "signal": {
+        "id": "d51296a4-2798-4af2-b169-8dced9b2ad1c",
+        "companyName": "Y Combinator",
+        "ticker": "YC",
+        "openRoles": 12,
+        "engineeringRoles": 12,
+        "enterprisePrice": null,
+        "webTrafficIndex": 50,
+        "healthScore": 48,
+        "confidence": "low",
+        "synthesisAlert": "Warning: If the number of open engineering roles drops to zero, it may indicate a hiring freeze.",
+        "createdAt": "2026-05-30T13:15:18.286+00:00"
+    }
+}``
