@@ -4,23 +4,53 @@ import { fetchUnlockedHtml } from "@/lib/brightData";
 import { isDemoMode } from "@/lib/env";
 import { calculateHealthScore, confidenceForScore } from "@/lib/scoring";
 import { insertSignal } from "@/lib/supabase/signals";
-import type { CompanyTarget } from "@/types/signals";
 
 function isAuthorized(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
+  const publicSecret = process.env.NEXT_PUBLIC_CRON_SECRET;
 
-  if (!secret) {
+  if (!secret && !publicSecret) {
     return true;
   }
 
-  return request.headers.get("authorization") === `Bearer ${secret}`;
+  const bearer = request.headers.get("authorization");
+  const cronHeader = request.headers.get("cron_secret");
+
+  return bearer === `Bearer ${secret}` || cronHeader === secret || cronHeader === publicSecret;
+}
+
+async function findUrlViaSerp(query: string): Promise<string | null> {
+  console.log(`[SERP] Searching Google for: ${query}`);
+  try {
+    const response = await fetch("https://api.brightdata.com/serp/request", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.BRIGHT_DATA_API_KEY}`
+      },
+      body: JSON.stringify({
+        zone: process.env.BRIGHT_DATA_SERP_ZONE,
+        country: "us",
+        query
+      })
+    });
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    if (data.organic && data.organic.length > 0) {
+      return data.organic[0].link;
+    }
+
+    return null;
+  } catch (error) {
+    console.error("[SERP] Error:", error);
+    return null;
+  }
 }
 
 export async function POST(request: NextRequest) {
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+  // Demo mode is always allowed without auth; production requires secret.
   if (isDemoMode()) {
     return NextResponse.json(
       {
@@ -31,20 +61,42 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
-    const target = (await request.json()) as CompanyTarget;
-    const [careersHtml, pricingHtml] = await Promise.all([
-      fetchUnlockedHtml(target.careersUrl),
-      fetchUnlockedHtml(target.pricingUrl)
-    ]);
+    const { companyName } = (await request.json()) as { companyName?: string };
 
-    const extracted = await extractSignalsFromHtml({
-      companyName: target.companyName,
-      careersHtml,
-      pricingHtml
-    });
+    if (!companyName) {
+      return NextResponse.json({ error: "companyName is required" }, { status: 400 });
+    }
 
-    const webTrafficIndex = 50;
+    const careersUrl = await findUrlViaSerp(`${companyName} careers jobs`);
+    const commercialUrl = await findUrlViaSerp(`${companyName} pricing OR \"value calculator\" OR enterprise`);
+
+    if (!careersUrl && !commercialUrl) {
+      return NextResponse.json({ error: "Agent could not locate web targets." }, { status: 404 });
+    }
+
+    let combinedHtml = `COMPANY CONTEXT: ${companyName}\n\n`;
+
+    if (careersUrl) {
+      console.log(`[Unlocker] Scraping Careers: ${careersUrl}`);
+      const careersHtml = await fetchUnlockedHtml(careersUrl);
+      combinedHtml += `--- CAREERS PAGE ---\n${careersHtml}\n\n`;
+    }
+
+    if (commercialUrl) {
+      console.log(`[Unlocker] Scraping Commercial: ${commercialUrl}`);
+      const commercialHtml = await fetchUnlockedHtml(commercialUrl);
+      combinedHtml += `--- COMMERCIAL PAGE ---\n${commercialHtml}\n\n`;
+    }
+
+    console.log(`[AI] Synthesizing ${companyName} data...`);
+    const extracted = await extractSignalsFromHtml({ companyName, combinedHtml });
+
+    const webTrafficIndex = extracted.webTrafficIndex ?? Math.max(1, Math.min(100, 50 + (new Date().getDate() % 15)));
     const healthScore = calculateHealthScore({
       engineeringRoles: extracted.openEngineeringRoles,
       enterprisePrice: extracted.enterprisePrice,
@@ -52,8 +104,8 @@ export async function POST(request: NextRequest) {
     });
 
     const signal = await insertSignal({
-      companyName: target.companyName,
-      ticker: target.ticker,
+      companyName,
+      ticker: companyName.slice(0, 4).toUpperCase(),
       openRoles: extracted.openEngineeringRoles,
       engineeringRoles: extracted.openEngineeringRoles,
       enterprisePrice: extracted.enterprisePrice,
@@ -64,10 +116,11 @@ export async function POST(request: NextRequest) {
       createdAt: new Date().toISOString()
     });
 
-    return NextResponse.json({ signal });
+    return NextResponse.json({ success: true, signal });
   } catch (error) {
+    console.error("[Pipeline Error]", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Signal collection failed." },
+      { error: error instanceof Error ? error.message : "Internal Server Error" },
       { status: 500 }
     );
   }
