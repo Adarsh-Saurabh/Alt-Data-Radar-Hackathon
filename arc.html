@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture Flowchart Viewer (Structured Layout)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        body.light-mode {
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+        .mermaid-container {
+            height: calc(100vh - 80px);
+            cursor: grab;
+        }
+        .mermaid-container:active {
+            cursor: grabbing;
+        }
+        /* Custom Mermaid styling variables injected over default theme */
+        .cluster rect {
+            fill: rgba(30, 41, 59, 0.4) !important;
+            stroke: #475569 !important;
+            stroke-width: 1.5px !important;
+        }
+        body.light-mode .cluster rect {
+            fill: rgba(226, 232, 240, 0.5) !important;
+            stroke: #cbd5e1 !important;
+        }
+        .cluster-label span {
+            color: #94a3b8 !important;
+            font-weight: 600;
+        }
+        body.light-mode .cluster-label span {
+            color: #475569 !important;
+        }
+        .edgeLabel span {
+            background-color: #1e293b !important;
+            color: #f1f5f9 !important;
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 11px !important;
+            border: 1px solid #334155;
+        }
+        body.light-mode .edgeLabel span {
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+            border: 1px solid #cbd5e1;
+        }
+    </style>
+</head>
+<body class="overflow-hidden select-none">
+
+    <header class="flex items-center justify-between px-6 h-16 border-b border-slate-800 bg-slate-900/50 backdrop-blur transition-colors">
+        <div class="flex items-center space-x-3">
+            <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-emerald-400 to-sky-400 bg-clip-text text-transparent">
+                System Pipeline Architecture
+            </span>
+            <span class="px-2 py-0.5 text-[10px] font-medium tracking-wider text-emerald-400 bg-emerald-400/10 rounded-full border border-emerald-400/20 uppercase">
+                Straight Lines Enabled
+            </span>
+        </div>
+        <div class="flex items-center space-x-4">
+            <button id="reset-btn" class="px-3 py-1.5 text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 rounded border border-slate-700 transition">
+                Reset View
+            </button>
+            <button id="theme-toggle" class="p-2 bg-slate-800 hover:bg-slate-700 text-yellow-400 rounded-full border border-slate-700 transition focus:outline-none">
+                🌙
+            </button>
+        </div>
+    </header>
+
+    <main id="canvas-container" class="mermaid-container w-full relative overflow-hidden flex items-center justify-center">
+        <div id="mermaid-render" class="mermaid opacity-0 transition-opacity duration-500 w-full h-full flex items-center justify-center">
+            flowchart TD
+                classDef client     fill:#1a3a6e,stroke:#0d2550,color:#fff,font-size:13px
+                classDef server     fill:#1e1e1c,stroke:#0a0a08,color:#e8e6e0,font-size:13px
+                classDef safety     fill:#2c2c2a,stroke:#555550,color:#e8e6e0,font-size:12px,stroke-dasharray:4 2
+                classDef ph1        fill:#1a5e2e,stroke:#0d3d1d,color:#fff,font-size:12px
+                classDef ph2        fill:#7a3a10,stroke:#4d2408,color:#fff,font-size:12px
+                classDef ph3        fill:#3d1a6e,stroke:#260f4d,color:#fff,font-size:12px
+                classDef ph4        fill:#0d4a4a,stroke:#073030,color:#fff,font-size:12px
+                classDef riskLabel  fill:#fff4e6,stroke:#d4890a,color:#7a4a08,font-size:11px,rx:4
+
+                A(["🖥 React Client\nbrowser · isProcessing = true"]):::client
+
+                subgraph SV["  ⚡ Next.js Serverless Function  ·  /api/analyze  "]
+                    direction TB
+                    B["API Route Handler\norchestrates all phases"]:::server
+                    SAFE["cleanAndParseJSON ⚠\nregex wrapper · JSON.parse fallback\ncritical safety net"]:::safety
+                end
+
+                subgraph PH1["  Phase 1 — Discovery  ·  ⏱ 1–3 s  "]
+                    C["Bright Data SERP API\nGoogle Search × 2  ·  parallel fetch\nreturns: careers URL + pricing URL"]:::ph1
+                    R1(["⚠ Risk: empty results\nfor obscure companies"]):::riskLabel
+                end
+
+                subgraph PH2["  Phase 2 — Acquisition  ·  ⏱ 5–15 s  ← HEAVIEST STAGE  "]
+                    D1["Web Unlocker\nCareers Page\nProxy rotation · CAPTCHA solve\nHeadless JS rendering"]:::ph2
+                    D2["Web Unlocker\nPricing Page\nProxy rotation · CAPTCHA solve\nHeadless JS rendering"]:::ph2
+                    R2(["⚠ Risk: connection timeout\nproxy failures · bot detection"]):::riskLabel
+                end
+
+                subgraph PH3["  Phase 3 — Synthesis  ·  ⏱ 3–8 s  "]
+                    E["AI/ML API Engine\nLLM extraction + scoring\nthousands of raw HTML tokens\noutputs structured JSON"]:::ph3
+                    R3(["⚠ Risk: hallucination\ntoken-limit truncation\nJSON malform"]):::riskLabel
+                end
+
+                subgraph PH4["  Phase 4 — Storage  ·  ⏱ &lt; 100 ms  "]
+                    F[("Supabase PostgreSQL\nTime-Series Insert\nindexed by company + timestamp")]:::ph4
+                end
+
+                A            -->|"① companyName string\ne.g. 'Amazon'"| B
+                B            -->|"② parallel GET /search × 2"| C
+                C            -->|"③ careers URL + pricing URL"| B
+                B            -->|"④ fetch careers page"| D1
+                B            -->|"⑤ fetch pricing page"| D2
+                D1           -->|"⑥ raw HTML"| B
+                D2           -->|"⑦ raw HTML"| B
+                B            -->|"⑧ raw HTML + system prompt\n(thousands of tokens)"| E
+                E            -->|"⑨ raw LLM response"| SAFE
+                SAFE         -->|"⑩ schema-safe validated JSON"| B
+                B            -->|"⑪ structured signal payload"| F
+                F            -->|"⑫ 200 OK · insert confirmed"| B
+                B            -->|"⑬ 200 OK · analysis complete"| A
+
+                C -.-> R1
+                D1 -.-> R2
+                D2 -.-> R2
+                E -.-> R3
+        </div>
+    </main>
+
+    <script>
+        // Initialize Mermaid with structured straight-line configurations
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            securityLevel: 'loose',
+            flowchart: {
+                useMaxWidth: false,
+                htmlLabels: true,
+                curve: 'linear' // Changed from 'basis' to 'linear' to eliminate messy loops
+            }
+        });
+
+        let panZoomInstance;
+        
+        window.addEventListener('load', () => {
+            const container = document.getElementById('mermaid-render');
+            
+            const checkSvgExist = setInterval(() => {
+                const svgElement = container.querySelector('svg');
+                if (svgElement) {
+                    clearInterval(checkSvgExist);
+                    
+                    svgElement.style.width = '100%';
+                    svgElement.style.height = '100%';
+                    
+                    panZoomInstance = svgPanZoom(svgElement, {
+                        zoomEnabled: true,
+                        controlIconsEnabled: false,
+                        fit: true,
+                        center: true,
+                        minZoom: 0.1,
+                        maxZoom: 5,
+                        zoomScaleSensitivity: 0.2
+                    });
+
+                    container.classList.remove('opacity-0');
+
+                    window.addEventListener('resize', () => {
+                        panZoomInstance.resize();
+                        panZoomInstance.fit();
+                        panZoomInstance.center();
+                    });
+                }
+            }, 100);
+        });
+
+        // Reset View Mechanics
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            if(panZoomInstance) {
+                panZoomInstance.reset();
+                panZoomInstance.fit();
+                panZoomInstance.center();
+            }
+        });
+
+        // Light/Dark Theme Switcher Logic
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        themeToggleBtn.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            const isLight = document.body.classList.contains('light-mode');
+            themeToggleBtn.innerText = isLight ? '☀️' : '🌙';
+            
+            const header = document.querySelector('header');
+            if(isLight) {
+                header.classList.remove('border-slate-800', 'bg-slate-900/50');
+                header.classList.add('border-slate-200', 'bg-white/80');
+            } else {
+                header.classList.remove('border-slate-200', 'bg-white/80');
+                header.classList.add('border-slate-800', 'bg-slate-900/50');
+            }
+        });
+    </script>
+</body>
+</html>
