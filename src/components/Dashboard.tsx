@@ -32,22 +32,40 @@ function byCreatedAtAsc(a: CompanySignal, b: CompanySignal) {
 export function Dashboard({ initialSignals }: DashboardProps) {
   const [chartMode, setChartMode] = useState<"health" | "roles">("health");
   const [signals, setSignals] = useState<CompanySignal[]>([...initialSignals].sort(byCreatedAtAsc));
+  const [selectedCompany, setSelectedCompany] = useState(initialSignals[initialSignals.length - 1]?.companyName ?? "");
   const [isPulling, setIsPulling] = useState(false);
   const [activeCompany, setActiveCompany] = useState("");
   const [toast, setToast] = useState<ToastState>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  const latest = signals[signals.length - 1];
-  const prior = signals[signals.length - 2];
+  const companyOptions = useMemo(() => {
+    const latestByCompany = new Map<string, CompanySignal>();
+    for (const signal of signals) {
+      latestByCompany.set(signal.companyName.toLowerCase(), signal);
+    }
+    return [...latestByCompany.values()].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [signals]);
+
+  const selectedSignals = useMemo(() => {
+    if (!selectedCompany) return signals;
+    return signals.filter((signal) => signal.companyName.toLowerCase() === selectedCompany.toLowerCase());
+  }, [selectedCompany, signals]);
+
+  const latest = selectedSignals[selectedSignals.length - 1];
+  const prior = selectedSignals[selectedSignals.length - 2];
   const scoreDelta = latest && prior ? latest.healthScore - prior.healthScore : 0;
-  const sortedAlerts = useMemo(() => [...signals].sort(byCreatedAtAsc).reverse().slice(0, 5), [signals]);
+  const sortedAlerts = useMemo(() => [...selectedSignals].sort(byCreatedAtAsc).reverse().slice(0, 5), [selectedSignals]);
 
   async function reloadSignals() {
     try {
       const res = await fetch("/api/signals/latest", { cache: "no-store" });
       const payload = await res.json();
       if (Array.isArray(payload.signals)) {
-        setSignals(payload.signals.sort(byCreatedAtAsc));
+        const sorted = payload.signals.sort(byCreatedAtAsc);
+        setSignals(sorted);
+        if (!selectedCompany && sorted.length > 0) {
+          setSelectedCompany(sorted[sorted.length - 1].companyName);
+        }
       }
     } catch (e) {
       console.error("Failed to reload signals", e);
@@ -65,6 +83,7 @@ export function Dashboard({ initialSignals }: DashboardProps) {
       const withoutDuplicate = current.filter((item) => item.id !== signal.id);
       return [...withoutDuplicate, signal].sort(byCreatedAtAsc);
     });
+    setSelectedCompany(signal.companyName);
     setIsPulling(false);
     setToast({
       kind: "success",
@@ -99,25 +118,49 @@ export function Dashboard({ initialSignals }: DashboardProps) {
         <DynamicSearch onStart={handleStart} onSuccess={handleSuccess} onError={handleError} />
 
         <div ref={resultsRef} className="scroll-mt-8">
-          <div className="flex w-full max-w-xs rounded-md border border-line bg-paper p-1">
-            <button
-              type="button"
-              className={`flex-1 rounded px-3 py-2 font-serif text-sm ${
-                chartMode === "health" ? "bg-ink text-white" : "text-ink/60"
-              }`}
-              onClick={() => setChartMode("health")}
-            >
-              Health
-            </button>
-            <button
-              type="button"
-              className={`flex-1 rounded px-3 py-2 font-serif text-sm ${
-                chartMode === "roles" ? "bg-ink text-white" : "text-ink/60"
-              }`}
-              onClick={() => setChartMode("roles")}
-            >
-              Signals
-            </button>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink/45">Selected Analysis</p>
+              <h3 className="mt-1 font-serif text-2xl text-ink">{latest?.companyName ?? "No company selected"}</h3>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <select
+                value={selectedCompany}
+                onChange={(event) => setSelectedCompany(event.target.value)}
+                disabled={companyOptions.length === 0}
+                className="min-h-10 rounded-md border border-line bg-paper px-3 py-2 font-mono text-sm text-ink"
+              >
+                {companyOptions.length > 0 ? (
+                  companyOptions.map((signal) => (
+                    <option key={signal.companyName.toLowerCase()} value={signal.companyName}>
+                      {signal.companyName}
+                    </option>
+                  ))
+                ) : (
+                  <option value="">No history loaded</option>
+                )}
+              </select>
+              <div className="flex w-full max-w-xs rounded-md border border-line bg-paper p-1">
+                <button
+                  type="button"
+                  className={`flex-1 rounded px-3 py-2 font-serif text-sm ${
+                    chartMode === "health" ? "bg-ink text-white" : "text-ink/60"
+                  }`}
+                  onClick={() => setChartMode("health")}
+                >
+                  Health
+                </button>
+                <button
+                  type="button"
+                  className={`flex-1 rounded px-3 py-2 font-serif text-sm ${
+                    chartMode === "roles" ? "bg-ink text-white" : "text-ink/60"
+                  }`}
+                  onClick={() => setChartMode("roles")}
+                >
+                  Signals
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -130,9 +173,9 @@ export function Dashboard({ initialSignals }: DashboardProps) {
             />
             <MetricCard
               icon={BriefcaseBusiness}
-              label="Engineering Roles"
-              value={`${latest?.engineeringRoles ?? 0}`}
-              detail="Open engineering roles extracted from careers pages"
+              label="Open Roles"
+              value={`${latest?.openRoles ?? 0}`}
+              detail={`${latest?.engineeringRoles ?? 0} engineering or technical roles detected`}
               tone="blue"
             />
             <MetricCard
@@ -159,13 +202,13 @@ export function Dashboard({ initialSignals }: DashboardProps) {
                     {chartMode === "health" ? "Earnings Health Score" : "Jobs + Pricing"}
                   </p>
                   <h3 className="mt-1 font-serif text-lg font-semibold text-ink">
-                    {latest?.companyName ?? "Demo Company"}
+                    {latest?.companyName ?? "No company selected"}
                   </h3>
                 </div>
                 <TrendingUp className="h-5 w-5 text-moss" aria-hidden />
               </div>
               <div className="mt-6">
-                <SignalChart signals={signals} mode={chartMode} />
+                <SignalChart signals={selectedSignals} mode={chartMode} />
               </div>
             </div>
 
@@ -180,7 +223,7 @@ export function Dashboard({ initialSignals }: DashboardProps) {
                 </div>
               </div>
               <div className="mt-5 space-y-4">
-                {sortedAlerts.map((signal) => (
+                {sortedAlerts.length > 0 ? sortedAlerts.map((signal) => (
                   <article key={signal.id} className="border-t border-white/12 pt-4">
                     <div className="flex items-center justify-between gap-3">
                       <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/40">
@@ -194,8 +237,56 @@ export function Dashboard({ initialSignals }: DashboardProps) {
                     </div>
                     <p className="mt-2 text-sm leading-6 text-white/76">{signal.synthesisAlert}</p>
                   </article>
-                ))}
+                )) : (
+                  <p className="border-t border-white/12 pt-4 text-sm leading-6 text-white/60">
+                    Run a validated company analysis to populate this feed.
+                  </p>
+                )}
               </div>
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-md border border-line bg-paper p-5">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink/45">Company History</p>
+                <h3 className="mt-1 font-serif text-lg font-semibold text-ink">
+                  {selectedSignals.length} pull{selectedSignals.length === 1 ? "" : "s"} for {latest?.companyName ?? "this target"}
+                </h3>
+              </div>
+            </div>
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full min-w-[680px] border-collapse font-mono text-sm">
+                <thead>
+                  <tr className="border-b border-line text-left text-ink/45">
+                    <th className="py-2 pr-4 font-medium">Date</th>
+                    <th className="py-2 pr-4 font-medium">Health</th>
+                    <th className="py-2 pr-4 font-medium">Open Roles</th>
+                    <th className="py-2 pr-4 font-medium">Eng/Tech Roles</th>
+                    <th className="py-2 pr-4 font-medium">Enterprise Price</th>
+                    <th className="py-2 pr-4 font-medium">Confidence</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...selectedSignals].reverse().map((signal) => (
+                    <tr key={signal.id} className="border-b border-line/70 text-ink">
+                      <td className="py-3 pr-4">
+                        {new Intl.DateTimeFormat("en", {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit"
+                        }).format(new Date(signal.createdAt))}
+                      </td>
+                      <td className="py-3 pr-4">{signal.healthScore}</td>
+                      <td className="py-3 pr-4">{signal.openRoles}</td>
+                      <td className="py-3 pr-4">{signal.engineeringRoles}</td>
+                      <td className="py-3 pr-4">{signal.enterprisePrice ? `$${signal.enterprisePrice}` : "N/A"}</td>
+                      <td className="py-3 pr-4 uppercase">{signal.confidence}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>

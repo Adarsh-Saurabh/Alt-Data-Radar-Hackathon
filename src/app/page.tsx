@@ -28,7 +28,10 @@ const flow = [
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const signals = await listSignals();
+  const signals = await listSignals().catch((error) => {
+    console.error("[Dashboard] Failed to load initial signal history:", error);
+    return [];
+  });
 
   return (
     <main>

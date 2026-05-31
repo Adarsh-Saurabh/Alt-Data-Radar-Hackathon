@@ -58,10 +58,11 @@ export async function extractSignalsFromHtml(input: {
 
   const promptParts = [
     `Company: ${input.companyName}`,
-    "Read the HTML. Extract the exact number of open engineering roles and the current price of the Enterprise tier.",
-    "If the company uses custom enterprise pricing (e.g., ROI calculators, PPAs, or contact-sales models), return null for `enterprise_price` and describe the pricing model in `synthesis_alert`.",
+    "Read the provided extracted page text. Extract only values that are supported by visible text in the input.",
+    "For `open_engineering_roles`, count currently open software, engineering, developer, data, ML, DevOps, platform, security engineering, and technical product engineering roles. If the page only links to an external job board and does not expose listings/counts in the text, return 0 and say the count could not be verified from the unlocked page. Do not describe that as a hiring drop unless the input explicitly says roles dropped.",
+    "For `enterprise_price`, return a number only when a concrete enterprise/highest-plan price is present. If the company uses custom enterprise pricing, ROI calculators, PPAs, or contact-sales models, return null.",
     'Output schema: {"open_engineering_roles": int, "enterprise_price": int | null, "web_traffic_index": int (1-100), "synthesis_alert": string}.',
-    "For `synthesis_alert`, include a one-sentence note about pricing structure when enterprise price is null, and a short warning if roles drop to zero.",
+    "For `synthesis_alert`, include one concise sentence with the evidence you used. Avoid generic language. Mention zero roles only as 'not verified from the unlocked careers page' unless the source text explicitly confirms zero openings.",
     "Estimate `web_traffic_index` (1-100) as a proxy based on firmographic clues in the provided HTML: job counts, geo spread, partner logos, deployment language. Use 1-30 for low, 31-70 for medium, and 71-100 for high."
   ];
 

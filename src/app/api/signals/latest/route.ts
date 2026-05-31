@@ -15,9 +15,7 @@ export async function GET() {
       }
     );
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to load signals." },
-      { status: 500 }
-    );
+    console.error("[Signals Latest] Failed to load signals:", error);
+    return NextResponse.json({ signals: [], warning: "Failed to load signal history." });
   }
 }

@@ -24,6 +24,7 @@ export function SignalChart({ signals, mode }: SignalChartProps) {
       new Date(signal.createdAt)
     ),
     healthScore: signal.healthScore,
+    openRoles: signal.openRoles,
     engineeringRoles: signal.engineeringRoles,
     enterprisePrice: signal.enterprisePrice ?? 0
   }));
@@ -41,8 +42,16 @@ export function SignalChart({ signals, mode }: SignalChartProps) {
           />
           <Line
             type="monotone"
+            dataKey="openRoles"
+            name="Open roles"
+            stroke="#34785a"
+            strokeWidth={3}
+            dot={{ r: 4, fill: "#34785a" }}
+          />
+          <Line
+            type="monotone"
             dataKey="engineeringRoles"
-            name="Engineering roles"
+            name="Engineering/technical roles"
             stroke="#245c9e"
             strokeWidth={3}
             dot={{ r: 4, fill: "#245c9e" }}
